@@ -1,22 +1,22 @@
-# 🏥 FONASA Playwright
+# FONASA Playwright
 
 Automate BPS FONASA invoice generation using Playwright and Bun.
 
-## ✨ Features
+## Features
 
-- 📝 Automatically fills the 4-step BPS FONASA form
-- 💱 Fetches USD/UYU exchange rate from BCU (Central Bank of Uruguay)
-- 🔄 Converts USD amounts to UYU using the last business day rate
-- 📊 Calculates "Base de calculo" as 70% of invoiced amount
-- 📄 Downloads the generated PDF invoice
-- 🔗 Provides payment link for online payment
+- Automatically fills the 4-step BPS FONASA form
+- Fetches USD/UYU exchange rate from BCU (Central Bank of Uruguay)
+- Converts USD amounts to UYU using the last business day rate
+- Calculates "Base de calculo" as 70% of invoiced amount
+- Downloads the generated PDF invoice
+- Provides payment link for online payment
 
-## 📋 Prerequisites
+## Prerequisites
 
 - [Bun](https://bun.sh/) runtime
 - Chromium browser (installed via Playwright)
 
-## 🚀 Installation
+## Installation
 
 ```bash
 # Clone the repository
@@ -30,7 +30,7 @@ bun install
 bun run install:browser
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 1. Copy the example environment file:
 
@@ -47,21 +47,19 @@ BPS_RUT=123456789012
 
 # Holder Data
 BPS_DOCUMENTO=12345678
-BPS_FECHA_NAC_DIA=17
-BPS_FECHA_NAC_MES=Jul      # Ene, Feb, Mar, Abr, May, Jun, Jul, Ago, Sep, Oct, Nov, Dic
-BPS_FECHA_NAC_ANIO=1990
+BPS_FECHA_NAC=11/12/1990    # Format: DD/MM/YYYY
 
 # Invoice Settings
-BPS_IMPUESTO=IRPF          # Options: IRPF, IRAE, IRPF e IRAE
+BPS_IMPUESTO=IRPF           # Options: IRPF, IRAE, IRPF e IRAE
 
 # Amount in USD (will be converted to UYU)
-BPS_MONTO_USD=10000
+BPS_MONTO_USD=1000
 
 # Browser settings
-HEADLESS=false             # Set to true for headless mode
+HEADLESS=false              # Set to true for headless mode
 ```
 
-## 🎮 Usage
+## Usage
 
 ```bash
 # Run the script
@@ -71,7 +69,7 @@ bun start
 bun dev
 ```
 
-## 📤 Output
+## Output
 
 The script will:
 
@@ -80,46 +78,52 @@ The script will:
 3. Generate and download the invoice PDF to `./output/`
 4. Display a summary with:
    - Reference number
-   - Amount to pay
-   - Due date
    - Payment link
 
 Example output:
 
 ```
 ═══════════════════════════════════════════════════════════════
-              📋 INVOICE GENERATED SUCCESSFULLY
+              INVOICE GENERATED SUCCESSFULLY
 ═══════════════════════════════════════════════════════════════
 
-  📌 Reference Number:    1538579955
-  💵 Amount Invoiced:     $10,000 USD
-  💱 Exchange Rate:       39.041 (2025-12-30)
-  💰 Amount in UYU:       390,410 UYU
-  📊 Base de calculo:     273,287 UYU (70%)
-  🧾 Amount to Pay:       12,298 UYU
-  📆 Payment Date:        12/01/2026
-  📅 Due Date:            12/01/2026
-  📁 PDF Location:        ./output/FacturaBPS_1538579955.pdf
+  Reference Number:    1538579955
+  Amount Invoiced:     $1,000 USD
+  Exchange Rate:       39.041 (2025-12-30)
+  Amount in UYU:       39,041 UYU
+  Base de calculo:     27,329 UYU (70%)
+  Payment Date:        12/01/2026
+  PDF Location:        ./output/FacturaBPS_1538579955.pdf
 
-  🔗 Payment Link:
+  Payment Link:
      http://www.bps.gub.uy/8759/pago_de_facturas.html?ref=1538579955
 
 ═══════════════════════════════════════════════════════════════
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 fonasa-playwright/
 ├── src/
-│   └── index.ts       # Main script
-├── output/            # Generated PDFs (gitignored)
-├── .env               # Your configuration (gitignored)
-├── .env.example       # Example configuration
+│   ├── index.ts           # Main entry point
+│   ├── config.ts          # Configuration loading
+│   ├── types.ts           # TypeScript interfaces
+│   ├── utils/
+│   │   ├── date.ts        # Date utilities
+│   │   └── exchange-rate.ts # BCU API client
+│   └── steps/
+│       ├── step1.ts       # Holder data form
+│       ├── step2.ts       # Invoice type selection
+│       ├── step3.ts       # Invoice data entry
+│       └── step4.ts       # PDF download
+├── output/                # Generated PDFs (gitignored)
+├── .env                   # Your configuration (gitignored)
+├── .env.example           # Example configuration
 ├── package.json
 └── README.md
 ```
 
-## 📜 License
+## License
 
 MIT
