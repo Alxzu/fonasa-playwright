@@ -1,129 +1,83 @@
-# FONASA Playwright
+# 🏥 FONASA Playwright
 
-Automate BPS FONASA invoice generation using Playwright and Bun.
+Automate BPS FONASA invoice generation.
 
-## Features
+## 🚀 Quick Start
 
-- Automatically fills the 4-step BPS FONASA form
-- Fetches USD/UYU exchange rate from BCU (Central Bank of Uruguay)
-- Converts USD amounts to UYU using the last business day rate
-- Calculates "Base de calculo" as 70% of invoiced amount
-- Downloads the generated PDF invoice
-- Provides payment link for online payment
-
-## Prerequisites
-
-- [Bun](https://bun.sh/) runtime
-- Chromium browser (installed via Playwright)
-
-## Installation
+### 1️⃣ Install Bun
 
 ```bash
-# Clone the repository
-git clone <your-repo-url>
-cd fonasa-playwright
+curl -fsSL https://bun.sh/install | bash
+```
 
-# Install dependencies
+### 2️⃣ Install dependencies
+
+```bash
 bun install
-
-# Install Chromium browser
 bun run install:browser
 ```
 
-## Configuration
-
-1. Copy the example environment file:
+### 3️⃣ Configure
 
 ```bash
 cp .env.example .env
 ```
 
-2. Edit `.env` with your data:
+Edit `.env` with your data:
 
 ```env
-# BPS Company Data
 BPS_EMPRESA=1234567
 BPS_RUT=123456789012
-
-# Holder Data
 BPS_DOCUMENTO=12345678
-BPS_FECHA_NAC=11/12/1990    # Format: DD/MM/YYYY
-
-# Invoice Settings
-BPS_IMPUESTO=IRPF           # Options: IRPF, IRAE, IRPF e IRAE
-
-# Amount in USD (will be converted to UYU)
+BPS_FECHA_NAC=11/12/1990
 BPS_MONTO_USD=1000
-
-# Browser settings
-HEADLESS=false              # Set to true for headless mode
 ```
 
-## Usage
+### 4️⃣ Run
 
 ```bash
-# Run the script
 bun start
-
-# Or run with file watching (development)
-bun dev
 ```
 
-## Output
+## ⚙️ Configuration Options
+
+| Variable | Description | Example | Required |
+|----------|-------------|---------|----------|
+| `BPS_EMPRESA` | Company number | `1234567` | ✅ |
+| `BPS_RUT` | RUT number | `123456789012` | ✅ |
+| `BPS_DOCUMENTO` | Document number | `12345678` | ✅ |
+| `BPS_FECHA_NAC` | Birth date (DD/MM/YYYY) | `11/12/1990` | ✅ |
+| `BPS_MONTO_USD` | Amount in USD | `1000` | ✅ |
+| `BPS_IMPUESTO` | Tax type | `IRPF`, `IRAE`, or `IRPF e IRAE` | ❌ |
+| `HEADLESS` | Hide browser | `true` or `false` | ❌ |
+
+## 📤 Output
 
 The script will:
-
-1. Fetch the current exchange rate from BCU
-2. Fill the BPS FONASA form automatically
-3. Generate and download the invoice PDF to `./output/`
-4. Display a summary with:
-   - Reference number
-   - Payment link
-
-Example output:
+- 💱 Fetch USD/UYU exchange rate from BCU
+- 📝 Fill the BPS FONASA form
+- 📄 Download the invoice PDF to `./output/`
+- 🔗 Show payment link
 
 ```
 ═══════════════════════════════════════════════════════════════
-              INVOICE GENERATED SUCCESSFULLY
+              📋 INVOICE GENERATED SUCCESSFULLY
 ═══════════════════════════════════════════════════════════════
 
-  Reference Number:    1538579955
-  Amount Invoiced:     $1,000 USD
-  Exchange Rate:       39.041 (2025-12-30)
-  Amount in UYU:       39,041 UYU
-  Base de calculo:     27,329 UYU (70%)
-  Payment Date:        12/01/2026
-  PDF Location:        ./output/FacturaBPS_1538579955.pdf
+  📌 Reference Number:    1538579955
+  💵 Amount Invoiced:     $1,000 USD
+  💱 Exchange Rate:       39.041 (2025-12-30)
+  💰 Amount in UYU:       39,041 UYU
+  📊 Base de calculo:     27,329 UYU (70%)
+  📆 Payment Date:        12/01/2026
+  📁 PDF Location:        ./output/FacturaBPS_1538579955.pdf
 
-  Payment Link:
+  🔗 Payment Link:
      http://www.bps.gub.uy/8759/pago_de_facturas.html?ref=1538579955
 
 ═══════════════════════════════════════════════════════════════
 ```
 
-## Project Structure
-
-```
-fonasa-playwright/
-├── src/
-│   ├── index.ts           # Main entry point
-│   ├── config.ts          # Configuration loading
-│   ├── types.ts           # TypeScript interfaces
-│   ├── utils/
-│   │   ├── date.ts        # Date utilities
-│   │   └── exchange-rate.ts # BCU API client
-│   └── steps/
-│       ├── step1.ts       # Holder data form
-│       ├── step2.ts       # Invoice type selection
-│       ├── step3.ts       # Invoice data entry
-│       └── step4.ts       # PDF download
-├── output/                # Generated PDFs (gitignored)
-├── .env                   # Your configuration (gitignored)
-├── .env.example           # Example configuration
-├── package.json
-└── README.md
-```
-
-## License
+## 📜 License
 
 MIT
