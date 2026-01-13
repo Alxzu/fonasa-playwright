@@ -1,22 +1,22 @@
-# FONASA Playwright
+# 🏥 FONASA Playwright
 
 Automate BPS FONASA invoice generation using Playwright and Bun.
 
-## Features
+## ✨ Features
 
-- Automatically fills the 4-step BPS FONASA form
-- Fetches USD/UYU exchange rate from BCU (Central Bank of Uruguay)
-- Converts USD amounts to UYU using the last business day rate
-- Calculates "Base de calculo" as 70% of invoiced amount
-- Downloads the generated PDF invoice
-- Provides payment link for online payment
+- 📝 Automatically fills the 4-step BPS FONASA form
+- 💱 Fetches USD/UYU exchange rate from BCU (Central Bank of Uruguay)
+- 🔄 Converts USD amounts to UYU using the last business day rate
+- 📊 Calculates "Base de calculo" as 70% of invoiced amount
+- 📄 Downloads the generated PDF invoice
+- 🔗 Provides payment link for online payment
 
-## Prerequisites
+## 📋 Prerequisites
 
 - [Bun](https://bun.sh/) runtime
 - Chromium browser (installed via Playwright)
 
-## Installation
+## 🚀 Installation
 
 ```bash
 # Clone the repository
@@ -30,7 +30,7 @@ bun install
 bun run install:browser
 ```
 
-## Configuration
+## ⚙️ Configuration
 
 1. Copy the example environment file:
 
@@ -61,7 +61,7 @@ BPS_MONTO_USD=10000
 HEADLESS=false             # Set to true for headless mode
 ```
 
-## Usage
+## 🎮 Usage
 
 ```bash
 # Run the script
@@ -71,7 +71,7 @@ bun start
 bun dev
 ```
 
-## Output
+## 📤 Output
 
 The script will:
 
@@ -88,26 +88,26 @@ Example output:
 
 ```
 ═══════════════════════════════════════════════════════════════
-              INVOICE GENERATED SUCCESSFULLY
+              📋 INVOICE GENERATED SUCCESSFULLY
 ═══════════════════════════════════════════════════════════════
 
-  Reference Number:    1538579955
-  Amount Invoiced:     $10,000 USD
-  Exchange Rate:       39.041 (2025-12-30)
-  Amount in UYU:       390,410 UYU
-  Base de calculo:     273,287 UYU (70%)
-  Amount to Pay:       12,298 UYU
-  Payment Date:        12/01/2026
-  Due Date:            12/01/2026
-  PDF Location:        ./output/FacturaBPS_1538579955.pdf
+  📌 Reference Number:    1538579955
+  💵 Amount Invoiced:     $10,000 USD
+  💱 Exchange Rate:       39.041 (2025-12-30)
+  💰 Amount in UYU:       390,410 UYU
+  📊 Base de calculo:     273,287 UYU (70%)
+  🧾 Amount to Pay:       12,298 UYU
+  📆 Payment Date:        12/01/2026
+  📅 Due Date:            12/01/2026
+  📁 PDF Location:        ./output/FacturaBPS_1538579955.pdf
 
-  Payment Link:
+  🔗 Payment Link:
      http://www.bps.gub.uy/8759/pago_de_facturas.html?ref=1538579955
 
 ═══════════════════════════════════════════════════════════════
 ```
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 fonasa-playwright/
@@ -120,6 +120,6 @@ fonasa-playwright/
 └── README.md
 ```
 
-## License
+## 📜 License
 
 MIT
