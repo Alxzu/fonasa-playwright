@@ -1,0 +1,22 @@
+{
+  "name": "fonasa-playwright",
+  "version": "1.0.0",
+  "description": "Automate BPS FONASA invoice generation using Playwright",
+  "module": "src/index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun --watch run src/index.ts",
+    "install:browser": "bunx playwright install chromium"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "playwright": "^1.57.0"
+  }
+}
