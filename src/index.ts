@@ -53,45 +53,86 @@ interface InvoiceResult {
 }
 
 /**
- * Get the last business day of the previous month
+ * Format date as YYYY-MM-DD
  */
-function getLastBusinessDayOfPreviousMonth(): string {
-  const today = new Date();
-  // Go to last day of previous month
-  const lastDayPrevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+function formatDate(date: Date): string {
+  return date.toISOString().split("T")[0] as string;
+}
 
-  // If it's a weekend, go back to Friday
-  const dayOfWeek = lastDayPrevMonth.getDay();
+/**
+ * Go back to previous business day (skip weekends)
+ */
+function getPreviousBusinessDay(date: Date): Date {
+  const newDate = new Date(date);
+  newDate.setDate(newDate.getDate() - 1);
+
+  // Skip weekends
+  const dayOfWeek = newDate.getDay();
   if (dayOfWeek === 0) {
-    lastDayPrevMonth.setDate(lastDayPrevMonth.getDate() - 2); // Sunday -> Friday
+    newDate.setDate(newDate.getDate() - 2); // Sunday -> Friday
   } else if (dayOfWeek === 6) {
-    lastDayPrevMonth.setDate(lastDayPrevMonth.getDate() - 1); // Saturday -> Friday
+    newDate.setDate(newDate.getDate() - 1); // Saturday -> Friday
   }
 
-  return lastDayPrevMonth.toISOString().split("T")[0] as string; // YYYY-MM-DD
+  return newDate;
+}
+
+/**
+ * Get the last day of the previous month (adjusted for weekends)
+ */
+function getLastDayOfPreviousMonth(): Date {
+  const today = new Date();
+  // Go to last day of previous month
+  const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+
+  // If it's a weekend, go back to Friday
+  const dayOfWeek = lastDay.getDay();
+  if (dayOfWeek === 0) {
+    lastDay.setDate(lastDay.getDate() - 2); // Sunday -> Friday
+  } else if (dayOfWeek === 6) {
+    lastDay.setDate(lastDay.getDate() - 1); // Saturday -> Friday
+  }
+
+  return lastDay;
 }
 
 /**
  * Fetch USD exchange rate from BCU API
+ * Retries with previous business days if the date is a holiday (404)
  */
 async function getExchangeRate(): Promise<{ rate: number; date: string }> {
-  const date = getLastBusinessDayOfPreviousMonth();
-  const url = `${CONFIG.exchangeRateAPI}?date=${date}`;
+  const MAX_RETRIES = 10; // Max days to go back (in case of consecutive holidays)
+  let currentDate = getLastDayOfPreviousMonth();
 
-  console.log(`📊 Fetching exchange rate for ${date}...`);
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const dateStr = formatDate(currentDate);
+    const url = `${CONFIG.exchangeRateAPI}?date=${dateStr}`;
 
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch exchange rate: ${response.status}`);
+    console.log(`📊 Fetching exchange rate for ${dateStr}...`);
+
+    const response = await fetch(url);
+
+    if (response.ok) {
+      const data = (await response.json()) as ExchangeRateResponse;
+      console.log(`   ✅ Rate: ${data.sellRate} UYU/USD\n`);
+
+      return {
+        rate: data.sellRate,
+        date: dateStr,
+      };
+    }
+
+    if (response.status === 404) {
+      console.log(`   ⚠️  No rate available (holiday?), trying previous day...`);
+      currentDate = getPreviousBusinessDay(currentDate);
+      continue;
+    }
+
+    // Other errors should throw
+    throw new Error(`Failed to fetch exchange rate: ${response.status} for date ${dateStr}`);
   }
 
-  const data = (await response.json()) as ExchangeRateResponse;
-  console.log(`   Rate: ${data.sellRate} UYU/USD\n`);
-
-  return {
-    rate: data.sellRate,
-    date: date,
-  };
+  throw new Error(`Could not find exchange rate after ${MAX_RETRIES} attempts`);
 }
 
 /**
@@ -112,7 +153,7 @@ function validateConfig(): void {
   if (missing.length > 0) {
     throw new Error(
       `Missing required configuration: ${missing.map((m) => m.key).join(", ")}\n` +
-        `Please check your .env file.`
+      `Please check your .env file.`
     );
   }
 }
