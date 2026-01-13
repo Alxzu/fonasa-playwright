@@ -68,7 +68,7 @@ function getLastBusinessDayOfPreviousMonth(): string {
     lastDayPrevMonth.setDate(lastDayPrevMonth.getDate() - 1); // Saturday -> Friday
   }
 
-  return lastDayPrevMonth.toISOString().split("T")[0]; // YYYY-MM-DD
+  return lastDayPrevMonth.toISOString().split("T")[0] as string; // YYYY-MM-DD
 }
 
 /**
