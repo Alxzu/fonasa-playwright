@@ -6,6 +6,8 @@
     "target": "ESNext",
     "module": "Preserve",
     "moduleDetection": "force",
+    // TS 7 no longer auto-includes every @types package; name them explicitly
+    "types": ["bun", "node"],
     "jsx": "react-jsx",
     "allowJs": true,
 
