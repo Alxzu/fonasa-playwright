@@ -19,7 +19,7 @@ export async function extractResultsAndDownloadPDF(page: Page): Promise<InvoiceE
   let referencia = "";
   const refMatch = paymentLink.match(/ref=(\d+)/);
   if (refMatch) {
-    referencia = refMatch[1];
+    referencia = refMatch[1] ?? "";
   }
 
   const pdfPath = await downloadPDF(page, referencia);
