@@ -55,13 +55,13 @@ async function main(): Promise<InvoiceResult> {
   const baseCalculo = Math.round(montoUYU * 0.7);
 
   console.log(
-    `💱 Converting: $${config.montoUSD.toLocaleString()} USD × ${exchange.rate} = ${montoUYU.toLocaleString()} UYU\n`,
+    `💱 Converting: $${config.montoUSD.toLocaleString()} USD × ${exchange.rate} = ${montoUYU.toLocaleString()} UYU\n`
   );
 
   // Launch browser
   const browser = await chromium.launch({ headless: config.headless });
   const context = await browser.newContext({
-    acceptDownloads: true,
+    acceptDownloads: true
   });
   const page = await context.newPage();
 
@@ -84,7 +84,7 @@ async function main(): Promise<InvoiceResult> {
       baseCalculo,
       fechaPago,
       paymentLink: extraction.paymentLink,
-      pdfPath: extraction.pdfPath,
+      pdfPath: extraction.pdfPath
     };
 
     printSummary(result);

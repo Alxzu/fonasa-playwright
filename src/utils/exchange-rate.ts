@@ -24,10 +24,10 @@ export async function getExchangeRate(): Promise<ExchangeRate> {
     } catch (networkError) {
       // Network error (connection refused, DNS failure, etc.)
       console.error(
-        `   ❌ Network error: ${networkError instanceof Error ? networkError.message : networkError}`,
+        `   ❌ Network error: ${networkError instanceof Error ? networkError.message : networkError}`
       );
       throw new Error(
-        `Unable to connect to exchange rate API at ${config.exchangeRateAPI}. Check network/server.`,
+        `Unable to connect to exchange rate API at ${config.exchangeRateAPI}. Check network/server.`
       );
     }
 
@@ -37,7 +37,7 @@ export async function getExchangeRate(): Promise<ExchangeRate> {
 
       return {
         rate: data.rates.sell,
-        date: dateStr,
+        date: dateStr
       };
     }
 
@@ -51,7 +51,7 @@ export async function getExchangeRate(): Promise<ExchangeRate> {
 
     if (response.status === 404 || errorData?.error?.includes("No exchange rate available")) {
       console.log(
-        `   ⚠️  No rate available for ${dateStr} (holiday/weekend), trying previous day...`,
+        `   ⚠️  No rate available for ${dateStr} (holiday/weekend), trying previous day...`
       );
       if (errorData?.suggestion) {
         console.log(`      💡 ${errorData.suggestion}`);

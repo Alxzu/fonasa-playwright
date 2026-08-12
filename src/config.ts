@@ -23,7 +23,7 @@ export const config: Config = {
   outputDir: process.env.OUTPUT_DIR || "./output",
 
   // Browser settings
-  headless: process.env.HEADLESS !== "false",
+  headless: process.env.HEADLESS !== "false"
 };
 
 const DATE_FORMAT_REGEX = /^\d{2}\/\d{2}\/\d{4}$/;
@@ -37,14 +37,14 @@ export function validateConfig(): void {
     { key: "rut", value: config.rut },
     { key: "documento", value: config.documento },
     { key: "fechaNacimiento", value: config.fechaNacimiento },
-    { key: "montoUSD", value: config.montoUSD },
+    { key: "montoUSD", value: config.montoUSD }
   ];
 
   const missing = required.filter((r) => !r.value);
   if (missing.length > 0) {
     throw new Error(
       `Missing required configuration: ${missing.map((m) => m.key).join(", ")}\n` +
-        `Please check your .env file.`,
+        `Please check your .env file.`
     );
   }
 
@@ -52,15 +52,14 @@ export function validateConfig(): void {
   if (!DATE_FORMAT_REGEX.test(config.fechaNacimiento)) {
     throw new Error(
       `Invalid date format for BPS_FECHA_NAC: "${config.fechaNacimiento}"\n` +
-        `Expected format: DD/MM/YYYY (e.g., 17/07/1990)`,
+        `Expected format: DD/MM/YYYY (e.g., 17/07/1990)`
     );
   }
 
   // Validate amount is positive
   if (config.montoUSD <= 0) {
     throw new Error(
-      `Invalid amount for BPS_MONTO_USD: ${config.montoUSD}\n` +
-        `Amount must be a positive number.`,
+      `Invalid amount for BPS_MONTO_USD: ${config.montoUSD}\n` + `Amount must be a positive number.`
     );
   }
 }

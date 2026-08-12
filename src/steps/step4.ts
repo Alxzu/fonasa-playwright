@@ -29,7 +29,7 @@ export async function extractResultsAndDownloadPDF(page: Page): Promise<InvoiceE
   return {
     referencia,
     paymentLink,
-    pdfPath,
+    pdfPath
   };
 }
 
@@ -40,7 +40,7 @@ async function extractPaymentLink(page: Page): Promise<string> {
 async function downloadPDF(page: Page, referencia: string): Promise<string> {
   const [download] = await Promise.all([
     page.waitForEvent("download"),
-    page.getByRole("link", { name: "Imprimir o Descargar Factura" }).click(),
+    page.getByRole("link", { name: "Imprimir o Descargar Factura" }).click()
   ]);
 
   // Ensure output directory exists

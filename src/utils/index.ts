@@ -2,6 +2,6 @@ export {
   formatDateES,
   formatDateISO,
   getLastDayOfPreviousMonth,
-  getPreviousBusinessDay,
+  getPreviousBusinessDay
 } from "./date";
 export { getExchangeRate } from "./exchange-rate";

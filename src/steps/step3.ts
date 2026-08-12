@@ -9,7 +9,7 @@ import { formatDateES } from "../utils/date";
 export async function fillStep3(
   page: Page,
   montoUYU: number,
-  baseCalculo: number,
+  baseCalculo: number
 ): Promise<string> {
   console.log("📄 Step 3: Filling invoice data...");
 
