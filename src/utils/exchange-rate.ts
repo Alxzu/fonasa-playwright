@@ -37,7 +37,7 @@ export async function getExchangeRate(): Promise<ExchangeRate> {
 
       return {
         rate: data.rates.sell,
-        date: dateStr,
+        date: dateStr
       };
     }
 
@@ -49,10 +49,7 @@ export async function getExchangeRate(): Promise<ExchangeRate> {
       // Response body is not JSON, ignore
     }
 
-    if (
-      response.status === 404 ||
-      errorData?.error?.includes("No exchange rate available")
-    ) {
+    if (response.status === 404 || errorData?.error?.includes("No exchange rate available")) {
       console.log(
         `   ⚠️  No rate available for ${dateStr} (holiday/weekend), trying previous day...`
       );
@@ -65,9 +62,7 @@ export async function getExchangeRate(): Promise<ExchangeRate> {
 
     // Other errors should throw with details
     const errorMessage = errorData?.error || `HTTP ${response.status}`;
-    throw new Error(
-      `Failed to fetch exchange rate: ${errorMessage} for date ${dateStr}`
-    );
+    throw new Error(`Failed to fetch exchange rate: ${errorMessage} for date ${dateStr}`);
   }
 
   throw new Error(`Could not find exchange rate after ${MAX_RETRIES} attempts`);

@@ -8,9 +8,14 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun --watch run src/index.ts",
-    "install:browser": "bunx playwright install chromium"
+    "install:browser": "bunx playwright install chromium",
+    "lint": "biome check .",
+    "typecheck": "tsc --noEmit",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write ."
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.8",
     "@types/bun": "latest"
   },
   "peerDependencies": {

@@ -17,14 +17,13 @@ export const config: Config = {
 
   // Exchange rate API
   exchangeRateAPI:
-    process.env.EXCHANGE_RATE_API ||
-    "https://bcu.alxzu.duckdns.org/api/v2/rates/usd-cash",
+    process.env.EXCHANGE_RATE_API || "https://bcu.alxzu.duckdns.org/api/v2/rates/usd-cash",
 
   // Output
   outputDir: process.env.OUTPUT_DIR || "./output",
 
   // Browser settings
-  headless: process.env.HEADLESS !== "false",
+  headless: process.env.HEADLESS !== "false"
 };
 
 const DATE_FORMAT_REGEX = /^\d{2}\/\d{2}\/\d{4}$/;
@@ -38,7 +37,7 @@ export function validateConfig(): void {
     { key: "rut", value: config.rut },
     { key: "documento", value: config.documento },
     { key: "fechaNacimiento", value: config.fechaNacimiento },
-    { key: "montoUSD", value: config.montoUSD },
+    { key: "montoUSD", value: config.montoUSD }
   ];
 
   const missing = required.filter((r) => !r.value);
@@ -60,8 +59,7 @@ export function validateConfig(): void {
   // Validate amount is positive
   if (config.montoUSD <= 0) {
     throw new Error(
-      `Invalid amount for BPS_MONTO_USD: ${config.montoUSD}\n` +
-        `Amount must be a positive number.`
+      `Invalid amount for BPS_MONTO_USD: ${config.montoUSD}\nAmount must be a positive number.`
     );
   }
 }

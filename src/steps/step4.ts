@@ -1,5 +1,5 @@
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import type { Page } from "playwright";
 import { config } from "../config";
 import type { InvoiceExtraction } from "../types";
@@ -7,9 +7,7 @@ import type { InvoiceExtraction } from "../types";
 /**
  * Step 4: Extract results and download PDF
  */
-export async function extractResultsAndDownloadPDF(
-  page: Page
-): Promise<InvoiceExtraction> {
+export async function extractResultsAndDownloadPDF(page: Page): Promise<InvoiceExtraction> {
   console.log("📄 Step 4: Extracting invoice data and downloading PDF...");
 
   // Wait for results page to load
@@ -21,7 +19,7 @@ export async function extractResultsAndDownloadPDF(
   let referencia = "";
   const refMatch = paymentLink.match(/ref=(\d+)/);
   if (refMatch) {
-    referencia = refMatch[1];
+    referencia = refMatch[1] ?? "";
   }
 
   const pdfPath = await downloadPDF(page, referencia);
@@ -31,21 +29,18 @@ export async function extractResultsAndDownloadPDF(
   return {
     referencia,
     paymentLink,
-    pdfPath,
+    pdfPath
   };
 }
 
 async function extractPaymentLink(page: Page): Promise<string> {
-  return (
-    (await page.locator('a:has-text("Pagar Factura")').getAttribute("href")) ||
-    ""
-  );
+  return (await page.locator('a:has-text("Pagar Factura")').getAttribute("href")) || "";
 }
 
 async function downloadPDF(page: Page, referencia: string): Promise<string> {
   const [download] = await Promise.all([
     page.waitForEvent("download"),
-    page.getByRole("link", { name: "Imprimir o Descargar Factura" }).click(),
+    page.getByRole("link", { name: "Imprimir o Descargar Factura" }).click()
   ]);
 
   // Ensure output directory exists

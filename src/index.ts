@@ -1,25 +1,51 @@
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { chromium, type Page } from "playwright";
 import { config, validateConfig } from "./config";
-import { fillStep1, fillStep2, fillStep3, extractResultsAndDownloadPDF } from "./steps";
+import { extractResultsAndDownloadPDF, fillStep1, fillStep2, fillStep3 } from "./steps";
 import type { InvoiceResult } from "./types";
 import { getExchangeRate } from "./utils";
 
 /**
- * Save a screenshot on failure for debugging
+ * Save a screenshot and the error details on failure, for debugging.
+ * Both files share a timestamp so they can be paired up.
  */
-async function saveErrorScreenshot(page: Page, error: Error): Promise<void> {
+async function saveErrorArtifacts(page: Page, error: Error): Promise<void> {
   try {
     if (!fs.existsSync(config.outputDir)) {
       fs.mkdirSync(config.outputDir, { recursive: true });
     }
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+
+    // url() is safe on a closed page, but the outer catch would swallow a throw
+    // here and cost us the log entirely, so guard it.
+    let url = "(unavailable)";
+    try {
+      url = page.url();
+    } catch {
+      // Keep the placeholder
+    }
+
+    // Write the details before the screenshot: screenshot() throws once the page
+    // is closed or crashed, which is exactly when these details matter most.
+    const logPath = path.join(config.outputDir, `error_${timestamp}.txt`);
+    await Bun.write(
+      logPath,
+      [
+        `Timestamp: ${new Date().toISOString()}`,
+        `URL:       ${url}`,
+        `Error:     ${error.message}`,
+        "",
+        error.stack ?? "(no stack trace available)"
+      ].join("\n")
+    );
+    console.error(`📝 Error details saved: ${logPath}`);
+
     const screenshotPath = path.join(config.outputDir, `error_${timestamp}.png`);
     await page.screenshot({ path: screenshotPath, fullPage: true });
     console.error(`📸 Screenshot saved: ${screenshotPath}`);
   } catch {
-    // Ignore screenshot errors
+    // Already in the failure path — never mask the original error
   }
 }
 
@@ -27,33 +53,19 @@ async function saveErrorScreenshot(page: Page, error: Error): Promise<void> {
  * Print summary of the generated invoice
  */
 function printSummary(result: InvoiceResult): void {
-  console.log(
-    "═══════════════════════════════════════════════════════════════"
-  );
+  console.log("═══════════════════════════════════════════════════════════════");
   console.log("              📋 INVOICE GENERATED SUCCESSFULLY");
-  console.log(
-    "═══════════════════════════════════════════════════════════════\n"
-  );
+  console.log("═══════════════════════════════════════════════════════════════\n");
   console.log(`  📌 Reference Number:    ${result.referencia}`);
-  console.log(
-    `  💵 Amount Invoiced:     $${result.montoUSD.toLocaleString()} USD`
-  );
-  console.log(
-    `  💱 Exchange Rate:       ${result.exchangeRate} (${result.exchangeDate})`
-  );
-  console.log(
-    `  💰 Amount in UYU:       ${result.montoUYU.toLocaleString()} UYU`
-  );
-  console.log(
-    `  📊 Base de cálculo:     ${result.baseCalculo.toLocaleString()} UYU (70%)`
-  );
+  console.log(`  💵 Amount Invoiced:     $${result.montoUSD.toLocaleString()} USD`);
+  console.log(`  💱 Exchange Rate:       ${result.exchangeRate} (${result.exchangeDate})`);
+  console.log(`  💰 Amount in UYU:       ${result.montoUYU.toLocaleString()} UYU`);
+  console.log(`  📊 Base de cálculo:     ${result.baseCalculo.toLocaleString()} UYU (70%)`);
   console.log(`  📆 Payment Date:        ${result.fechaPago}`);
   console.log(`  📁 PDF Location:        ${result.pdfPath}`);
   console.log(`\n  🔗 Payment Link:`);
   console.log(`     ${result.paymentLink}\n`);
-  console.log(
-    "═══════════════════════════════════════════════════════════════\n"
-  );
+  console.log("═══════════════════════════════════════════════════════════════\n");
 }
 
 /**
@@ -75,7 +87,7 @@ async function main(): Promise<InvoiceResult> {
   // Launch browser
   const browser = await chromium.launch({ headless: config.headless });
   const context = await browser.newContext({
-    acceptDownloads: true,
+    acceptDownloads: true
   });
   const page = await context.newPage();
 
@@ -98,7 +110,7 @@ async function main(): Promise<InvoiceResult> {
       baseCalculo,
       fechaPago,
       paymentLink: extraction.paymentLink,
-      pdfPath: extraction.pdfPath,
+      pdfPath: extraction.pdfPath
     };
 
     printSummary(result);
@@ -106,7 +118,7 @@ async function main(): Promise<InvoiceResult> {
     return result;
   } catch (error) {
     console.error("❌ Error:", error);
-    await saveErrorScreenshot(page, error as Error);
+    await saveErrorArtifacts(page, error as Error);
     throw error;
   } finally {
     await browser.close();
