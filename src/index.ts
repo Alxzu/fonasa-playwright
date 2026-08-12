@@ -1,15 +1,15 @@
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { chromium, type Page } from "playwright";
 import { config, validateConfig } from "./config";
-import { fillStep1, fillStep2, fillStep3, extractResultsAndDownloadPDF } from "./steps";
+import { extractResultsAndDownloadPDF, fillStep1, fillStep2, fillStep3 } from "./steps";
 import type { InvoiceResult } from "./types";
 import { getExchangeRate } from "./utils";
 
 /**
  * Save a screenshot on failure for debugging
  */
-async function saveErrorScreenshot(page: Page, error: Error): Promise<void> {
+async function saveErrorScreenshot(page: Page, _error: Error): Promise<void> {
   try {
     if (!fs.existsSync(config.outputDir)) {
       fs.mkdirSync(config.outputDir, { recursive: true });
@@ -27,33 +27,19 @@ async function saveErrorScreenshot(page: Page, error: Error): Promise<void> {
  * Print summary of the generated invoice
  */
 function printSummary(result: InvoiceResult): void {
-  console.log(
-    "═══════════════════════════════════════════════════════════════"
-  );
+  console.log("═══════════════════════════════════════════════════════════════");
   console.log("              📋 INVOICE GENERATED SUCCESSFULLY");
-  console.log(
-    "═══════════════════════════════════════════════════════════════\n"
-  );
+  console.log("═══════════════════════════════════════════════════════════════\n");
   console.log(`  📌 Reference Number:    ${result.referencia}`);
-  console.log(
-    `  💵 Amount Invoiced:     $${result.montoUSD.toLocaleString()} USD`
-  );
-  console.log(
-    `  💱 Exchange Rate:       ${result.exchangeRate} (${result.exchangeDate})`
-  );
-  console.log(
-    `  💰 Amount in UYU:       ${result.montoUYU.toLocaleString()} UYU`
-  );
-  console.log(
-    `  📊 Base de cálculo:     ${result.baseCalculo.toLocaleString()} UYU (70%)`
-  );
+  console.log(`  💵 Amount Invoiced:     $${result.montoUSD.toLocaleString()} USD`);
+  console.log(`  💱 Exchange Rate:       ${result.exchangeRate} (${result.exchangeDate})`);
+  console.log(`  💰 Amount in UYU:       ${result.montoUYU.toLocaleString()} UYU`);
+  console.log(`  📊 Base de cálculo:     ${result.baseCalculo.toLocaleString()} UYU (70%)`);
   console.log(`  📆 Payment Date:        ${result.fechaPago}`);
   console.log(`  📁 PDF Location:        ${result.pdfPath}`);
   console.log(`\n  🔗 Payment Link:`);
   console.log(`     ${result.paymentLink}\n`);
-  console.log(
-    "═══════════════════════════════════════════════════════════════\n"
-  );
+  console.log("═══════════════════════════════════════════════════════════════\n");
 }
 
 /**
@@ -69,7 +55,7 @@ async function main(): Promise<InvoiceResult> {
   const baseCalculo = Math.round(montoUYU * 0.7);
 
   console.log(
-    `💱 Converting: $${config.montoUSD.toLocaleString()} USD × ${exchange.rate} = ${montoUYU.toLocaleString()} UYU\n`
+    `💱 Converting: $${config.montoUSD.toLocaleString()} USD × ${exchange.rate} = ${montoUYU.toLocaleString()} UYU\n`,
   );
 
   // Launch browser

@@ -9,7 +9,7 @@ import { formatDateES } from "../utils/date";
 export async function fillStep3(
   page: Page,
   montoUYU: number,
-  baseCalculo: number
+  baseCalculo: number,
 ): Promise<string> {
   console.log("📄 Step 3: Filling invoice data...");
 
@@ -28,9 +28,7 @@ export async function fillStep3(
 }
 
 async function fillTaxType(page: Page): Promise<void> {
-  const impuestoSelect = page
-    .locator('select[id*="impuesto"], select[name*="impuesto"]')
-    .first();
+  const impuestoSelect = page.locator('select[id*="impuesto"], select[name*="impuesto"]').first();
   if ((await impuestoSelect.count()) > 0) {
     await impuestoSelect.selectOption(config.impuesto);
   } else {
@@ -86,9 +84,7 @@ async function fillPaymentDate(page: Page): Promise<string> {
       await calendarIcon.click();
       await page.waitForTimeout(500);
       // Click on today's day number
-      await page
-        .getByRole("link", { name: String(today.getDate()), exact: true })
-        .click();
+      await page.getByRole("link", { name: String(today.getDate()), exact: true }).click();
       await page.waitForTimeout(300);
     }
   } catch {
@@ -100,9 +96,7 @@ async function fillPaymentDate(page: Page): Promise<string> {
 
 async function confirmStep(page: Page): Promise<void> {
   const confirmBtn = page
-    .locator(
-      'a:has-text("Confirmar"), input[value*="Confirmar"], button:has-text("Confirmar")'
-    )
+    .locator('a:has-text("Confirmar"), input[value*="Confirmar"], button:has-text("Confirmar")')
     .first();
   await confirmBtn.click();
   await page.waitForLoadState("networkidle");

@@ -17,8 +17,7 @@ export const config: Config = {
 
   // Exchange rate API
   exchangeRateAPI:
-    process.env.EXCHANGE_RATE_API ||
-    "https://bcu.alxzu.duckdns.org/api/v2/rates/usd-cash",
+    process.env.EXCHANGE_RATE_API || "https://bcu.alxzu.duckdns.org/api/v2/rates/usd-cash",
 
   // Output
   outputDir: process.env.OUTPUT_DIR || "./output",
@@ -45,7 +44,7 @@ export function validateConfig(): void {
   if (missing.length > 0) {
     throw new Error(
       `Missing required configuration: ${missing.map((m) => m.key).join(", ")}\n` +
-        `Please check your .env file.`
+        `Please check your .env file.`,
     );
   }
 
@@ -53,7 +52,7 @@ export function validateConfig(): void {
   if (!DATE_FORMAT_REGEX.test(config.fechaNacimiento)) {
     throw new Error(
       `Invalid date format for BPS_FECHA_NAC: "${config.fechaNacimiento}"\n` +
-        `Expected format: DD/MM/YYYY (e.g., 17/07/1990)`
+        `Expected format: DD/MM/YYYY (e.g., 17/07/1990)`,
     );
   }
 
@@ -61,7 +60,7 @@ export function validateConfig(): void {
   if (config.montoUSD <= 0) {
     throw new Error(
       `Invalid amount for BPS_MONTO_USD: ${config.montoUSD}\n` +
-        `Amount must be a positive number.`
+        `Amount must be a positive number.`,
     );
   }
 }
