@@ -7,19 +7,45 @@ import type { InvoiceResult } from "./types";
 import { getExchangeRate } from "./utils";
 
 /**
- * Save a screenshot on failure for debugging
+ * Save a screenshot and the error details on failure, for debugging.
+ * Both files share a timestamp so they can be paired up.
  */
-async function saveErrorScreenshot(page: Page, _error: Error): Promise<void> {
+async function saveErrorArtifacts(page: Page, error: Error): Promise<void> {
   try {
     if (!fs.existsSync(config.outputDir)) {
       fs.mkdirSync(config.outputDir, { recursive: true });
     }
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+
+    // url() is safe on a closed page, but the outer catch would swallow a throw
+    // here and cost us the log entirely, so guard it.
+    let url = "(unavailable)";
+    try {
+      url = page.url();
+    } catch {
+      // Keep the placeholder
+    }
+
+    // Write the details before the screenshot: screenshot() throws once the page
+    // is closed or crashed, which is exactly when these details matter most.
+    const logPath = path.join(config.outputDir, `error_${timestamp}.txt`);
+    await Bun.write(
+      logPath,
+      [
+        `Timestamp: ${new Date().toISOString()}`,
+        `URL:       ${url}`,
+        `Error:     ${error.message}`,
+        "",
+        error.stack ?? "(no stack trace available)"
+      ].join("\n")
+    );
+    console.error(`📝 Error details saved: ${logPath}`);
+
     const screenshotPath = path.join(config.outputDir, `error_${timestamp}.png`);
     await page.screenshot({ path: screenshotPath, fullPage: true });
     console.error(`📸 Screenshot saved: ${screenshotPath}`);
   } catch {
-    // Ignore screenshot errors
+    // Already in the failure path — never mask the original error
   }
 }
 
@@ -92,7 +118,7 @@ async function main(): Promise<InvoiceResult> {
     return result;
   } catch (error) {
     console.error("❌ Error:", error);
-    await saveErrorScreenshot(page, error as Error);
+    await saveErrorArtifacts(page, error as Error);
     throw error;
   } finally {
     await browser.close();

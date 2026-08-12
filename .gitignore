@@ -29,6 +29,9 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .cache
 *.tsbuildinfo
 
+# Claude Code scratch worktrees (transient checkouts, not project config)
+.claude/worktrees/
+
 # IntelliJ based IDEs
 .idea
 

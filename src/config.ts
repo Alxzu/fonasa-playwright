@@ -59,7 +59,7 @@ export function validateConfig(): void {
   // Validate amount is positive
   if (config.montoUSD <= 0) {
     throw new Error(
-      `Invalid amount for BPS_MONTO_USD: ${config.montoUSD}\n` + `Amount must be a positive number.`
+      `Invalid amount for BPS_MONTO_USD: ${config.montoUSD}\nAmount must be a positive number.`
     );
   }
 }
