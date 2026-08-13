@@ -24,3 +24,34 @@ jobs:
 
       - name: Typecheck
         run: bun run typecheck
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # Rung 3 of the verification ladder: pure logic, no browser.
+      - name: Unit tests
+        run: bun run test:unit
+
+      - name: Install Chromium
+        run: bun run install:browser
+
+      - name: Preflight
+        run: bun run preflight
+
+      # Rungs 4 and 5: selector cascades against hazard fixtures, and the whole pipeline
+      # against the mock BPS. Neither touches the real BPS — see docs/IMPROVEMENT_PLAN.md §9.
+      - name: Selector tests
+        run: bun run test:selectors
+
+      - name: End-to-end tests (mock BPS)
+        run: bun run test:e2e

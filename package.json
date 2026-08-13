@@ -9,10 +9,16 @@
     "start": "bun run src/index.ts",
     "dev": "bun --watch run src/index.ts",
     "install:browser": "bunx playwright install chromium",
+    "preflight": "bun run scripts/preflight.ts",
     "lint": "biome check .",
-    "typecheck": "tsc --noEmit",
     "lint:fix": "biome check --write .",
-    "format": "biome format --write ."
+    "format": "biome format --write .",
+    "typecheck": "tsc --noEmit",
+    "test": "bun run test:unit && bun run test:selectors && bun run test:e2e",
+    "test:unit": "bun test test/unit",
+    "test:selectors": "bun test test/selectors",
+    "test:e2e": "bun run scripts/run-e2e.ts",
+    "mock": "bun run test/mock-bps/cli.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.8",
