@@ -1,7 +1,4 @@
-export {
-  formatDateES,
-  formatDateISO,
-  getLastDayOfPreviousMonth,
-  getPreviousBusinessDay
-} from "./date";
-export { getExchangeRate } from "./exchange-rate";
+export * from "./check-digits";
+export * from "./date";
+export * from "./dom";
+export * from "./exchange-rate";

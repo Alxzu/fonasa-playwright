@@ -1,137 +1,93 @@
-import * as fs from "node:fs";
-import * as path from "node:path";
-import { chromium, type Page } from "playwright";
-import { config, validateConfig } from "./config";
-import { extractResultsAndDownloadPDF, fillStep1, fillStep2, fillStep3 } from "./steps";
+import { chromium } from "playwright";
+import { parseCliArgs, USAGE } from "./cli";
+import { loadConfig, validateConfig } from "./config";
+import { captureFailureArtifacts, computeAmounts, resultPathForPeriodo, runInvoice } from "./run";
 import type { InvoiceResult } from "./types";
-import { getExchangeRate } from "./utils";
+import { getExpectedPeriodo } from "./utils/date";
+import { getExchangeRate } from "./utils/exchange-rate";
 
-/**
- * Save a screenshot and the error details on failure, for debugging.
- * Both files share a timestamp so they can be paired up.
- */
-async function saveErrorArtifacts(page: Page, error: Error): Promise<void> {
-  try {
-    if (!fs.existsSync(config.outputDir)) {
-      fs.mkdirSync(config.outputDir, { recursive: true });
-    }
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-
-    // url() is safe on a closed page, but the outer catch would swallow a throw
-    // here and cost us the log entirely, so guard it.
-    let url = "(unavailable)";
-    try {
-      url = page.url();
-    } catch {
-      // Keep the placeholder
-    }
-
-    // Write the details before the screenshot: screenshot() throws once the page
-    // is closed or crashed, which is exactly when these details matter most.
-    const logPath = path.join(config.outputDir, `error_${timestamp}.txt`);
-    await Bun.write(
-      logPath,
-      [
-        `Timestamp: ${new Date().toISOString()}`,
-        `URL:       ${url}`,
-        `Error:     ${error.message}`,
-        "",
-        error.stack ?? "(no stack trace available)"
-      ].join("\n")
-    );
-    console.error(`📝 Error details saved: ${logPath}`);
-
-    const screenshotPath = path.join(config.outputDir, `error_${timestamp}.png`);
-    await page.screenshot({ path: screenshotPath, fullPage: true });
-    console.error(`📸 Screenshot saved: ${screenshotPath}`);
-  } catch {
-    // Already in the failure path — never mask the original error
-  }
-}
-
-/**
- * Print summary of the generated invoice
- */
 function printSummary(result: InvoiceResult): void {
-  console.log("═══════════════════════════════════════════════════════════════");
+  const line = "═".repeat(63);
+  console.log(line);
   console.log("              📋 INVOICE GENERATED SUCCESSFULLY");
-  console.log("═══════════════════════════════════════════════════════════════\n");
+  console.log(`${line}\n`);
   console.log(`  📌 Reference Number:    ${result.referencia}`);
+  console.log(`  🗓️  Período:             ${result.periodo}`);
   console.log(`  💵 Amount Invoiced:     $${result.montoUSD.toLocaleString()} USD`);
-  console.log(`  💱 Exchange Rate:       ${result.exchangeRate} (${result.exchangeDate})`);
+  console.log(
+    `  💱 Exchange Rate:       ${result.exchangeRate} (${result.exchangeDate}, ${result.exchangeLeg})`
+  );
   console.log(`  💰 Amount in UYU:       ${result.montoUYU.toLocaleString()} UYU`);
   console.log(`  📊 Base de cálculo:     ${result.baseCalculo.toLocaleString()} UYU (70%)`);
-  console.log(`  📆 Payment Date:        ${result.fechaPago}`);
+  console.log(`  📆 Payment Date:        ${result.fechaPago ?? "NOT SET — verify on the PDF"}`);
   console.log(`  📁 PDF Location:        ${result.pdfPath}`);
-  console.log(`\n  🔗 Payment Link:`);
-  console.log(`     ${result.paymentLink}\n`);
-  console.log("═══════════════════════════════════════════════════════════════\n");
+  console.log(`\n  🔗 Payment Link:\n     ${result.paymentLink}\n`);
+  console.log(`${line}\n`);
 }
 
-/**
- * Main function - orchestrates the entire invoice generation process
- */
-async function main(): Promise<InvoiceResult> {
-  // Validate configuration
-  validateConfig();
+async function main(): Promise<void> {
+  const options = parseCliArgs(Bun.argv.slice(2));
+  if (options.help) {
+    console.log(USAGE);
+    return;
+  }
 
-  // Get exchange rate from BCU
-  const exchange = await getExchangeRate();
-  const montoUYU = Math.round(config.montoUSD * exchange.rate);
-  const baseCalculo = Math.round(montoUYU * 0.7);
+  const config = loadConfig(process.env, options);
+  for (const warning of validateConfig(config)) console.warn(`⚠️  ${warning}`);
 
-  console.log(
-    `💱 Converting: $${config.montoUSD.toLocaleString()} USD × ${exchange.rate} = ${montoUYU.toLocaleString()} UYU\n`
-  );
-
-  // Launch browser
-  const browser = await chromium.launch({ headless: config.headless });
-  const context = await browser.newContext({
-    acceptDownloads: true
+  const today = new Date();
+  const exchange = await getExchangeRate({
+    api: config.exchangeRateAPI,
+    today,
+    fetch: globalThis.fetch,
+    log: (message) => console.log(message)
   });
+
+  if (config.dryRun) {
+    const { montoUYU, baseCalculo } = computeAmounts(config.montoUSD, exchange.rate);
+    const periodo = getExpectedPeriodo(today);
+    console.log(
+      `\n🧪 Dry run — no browser, no invoice.\n` +
+        `   Período:         ${periodo}\n` +
+        `   Rate:            ${exchange.rate} (${exchange.date}, ${exchange.leg})\n` +
+        `   Monto:           ${montoUYU.toLocaleString()} UYU\n` +
+        `   Base de cálculo: ${baseCalculo.toLocaleString()} UYU\n` +
+        `   Would write:     ${resultPathForPeriodo(config, periodo)}\n`
+    );
+    return;
+  }
+
+  const browser = await chromium.launch({ headless: config.headless });
+  const context = await browser.newContext({ acceptDownloads: true });
+  await context.tracing.start({ screenshots: true, snapshots: true });
   const page = await context.newPage();
 
   try {
     console.log("🚀 Starting BPS FONASA form automation...\n");
+    const result = await runInvoice(page, config, { today, exchange });
 
-    // Execute form steps
-    await fillStep1(page);
-    await fillStep2(page);
-    const fechaPago = await fillStep3(page, montoUYU, baseCalculo);
-    const extraction = await extractResultsAndDownloadPDF(page);
-
-    // Build result
-    const result: InvoiceResult = {
-      referencia: extraction.referencia,
-      montoUSD: config.montoUSD,
-      exchangeRate: exchange.rate,
-      exchangeDate: exchange.date,
-      montoUYU,
-      baseCalculo,
-      fechaPago,
-      paymentLink: extraction.paymentLink,
-      pdfPath: extraction.pdfPath
-    };
-
-    printSummary(result);
-
-    return result;
+    if (options.json) {
+      console.log(JSON.stringify(result, null, 2));
+    } else {
+      printSummary(result);
+    }
   } catch (error) {
-    console.error("❌ Error:", error);
-    await saveErrorArtifacts(page, error as Error);
+    console.error("❌ Error:", error instanceof Error ? error.message : error);
+    const artifacts = await captureFailureArtifacts(page, config, error as Error);
+    if (artifacts.length > 0) {
+      console.error(`\n🔍 Debug artifacts written:`);
+      for (const file of artifacts) console.error(`   ${file}`);
+      console.error(`   Inspect the trace with: bunx playwright show-trace <trace_*.zip>\n`);
+    }
     throw error;
   } finally {
     await browser.close();
   }
 }
 
-// Run
-main()
-  .then(() => {
-    console.log("🎉 Process completed successfully!");
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error("💥 Process failed:", error);
-    process.exit(1);
-  });
+// Plan F21: no process.exit(0) on success — it can truncate pending stdout writes.
+// Let the process end naturally; only a failure sets a non-zero exit code.
+main().catch((error) => {
+  console.error("💥 Process failed:", error instanceof Error ? error.message : error);
+  process.exitCode = 1;
+});

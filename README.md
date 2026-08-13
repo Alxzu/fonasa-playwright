@@ -105,6 +105,49 @@ Two files are written to `OUTPUT_DIR`, sharing a timestamp so they pair up:
 
 If the browser crashed or closed, the screenshot may be missing — the `.txt` is written first precisely so the diagnostics survive that case.
 
+A scrubbed copy of the page HTML (`error_<timestamp>.html`, with every input value blanked)
+and a Playwright trace (`trace_<timestamp>.zip`) are written alongside them. The trace is the
+useful one — `bunx playwright show-trace trace_*.zip` gives a time-travelling DOM for every
+action, which a screenshot cannot.
+
+Each run also writes `output/result_<período>.json` with the full result, for scripting.
+
+## 🎛️ CLI flags
+
+```bash
+bun start -- --usd 1500     # override the amount for this run
+bun start -- --dry-run      # compute and print; never opens a browser
+bun start -- --json         # print the result as JSON
+bun start -- --force        # allow a second invoice for a período already invoiced
+bun start -- --help
+```
+
+> ⚠️ A successful run creates a **real invoice** with tax implications. The bot refuses to
+> invoice the same período twice unless you pass `--force`.
+
+## 🧪 Testing
+
+Four rungs, **none of which touch the real BPS**:
+
+```bash
+bun run typecheck        # tsc --noEmit
+bun run lint             # biome
+bun run test:unit        # date rules, rate walk-back, config, check digits — no browser
+bun run test:selectors   # selector cascades vs hazard fixtures — no server
+bun run test:e2e         # the whole pipeline vs a mock BPS, incl. 15 failure scenarios
+```
+
+The mock is a stateful fake of the JSF wizard — it validates postbacks, re-renders with
+error blocks on failure, and can inject specific faults. Drive the real bot against it:
+
+```bash
+bun run mock
+BPS_FORM_URL='http://localhost:3999/SnisProfesionalesWeb/paginas/anticipos/snisAnticiposAInicio.jsf' bun start
+```
+
+Append `?scenario=<name>` to the URL to reproduce a specific failure — `bun run mock`
+prints the list. See `docs/IMPROVEMENT_PLAN.md` for the design and what remains open.
+
 ## 📜 License
 
 MIT
