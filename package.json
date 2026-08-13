@@ -14,10 +14,10 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "typecheck": "tsc --noEmit",
-    "test": "bun test",
+    "test": "bun run test:unit && bun run test:selectors && bun run test:e2e",
     "test:unit": "bun test test/unit",
     "test:selectors": "bun test test/selectors",
-    "test:e2e": "bun test test/e2e",
+    "test:e2e": "bun run scripts/run-e2e.ts",
     "mock": "bun run test/mock-bps/cli.ts"
   },
   "devDependencies": {

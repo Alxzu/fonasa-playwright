@@ -41,6 +41,11 @@ const BASE_ENV = {
  * loads every test file into one process, so shared mutable state means one file's
  * `afterAll` can tear down a browser another file is still using — which shows up as
  * unrelated tests timing out. Each file owns its own harness instead.
+ *
+ * That is only half the invariant. The other half — one FILE per process, so one launch per
+ * process — is enforced by `scripts/run-e2e.ts`, because the wedge threshold is as low as
+ * two launches on a 2-core CI runner. Do not run `bun test test/e2e` directly; use
+ * `bun run test:e2e`.
  */
 export interface Harness {
   run: typeof runAgainstMock;

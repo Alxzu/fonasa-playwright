@@ -668,14 +668,21 @@ scheduling the simulator before the rewrites rather than after.
   `amount-reformatted` scenario, which mangles the value on blur. Fixed by re-verifying
   both money fields immediately before clicking *Confirmar* (`assertStillSet`).
   This is a real defect the plan did not anticipate.
-- **A11 — repeated `chromium.launch()` in one Bun process wedges.** After ~4 launches the
-  process silently stops making progress; whichever test is running times out, and the
-  *failing test moves between runs*, which reads as flakiness in the code under test. The
-  e2e suite went from 131s with 2 spurious failures to 14s with none by using one browser
-  per test file and a fresh **context** per run. Worth knowing before anyone "fixes" a
-  phantom flake. Test files must not share browser state via module-level singletons
-  either — bun loads every file into one process, so one file's `afterAll` can tear down a
-  browser another file is still using.
+- **A11 — repeated `chromium.launch()` in one Bun process wedges.** The process silently
+  stops making progress; whichever test is running times out, and the *failing test moves
+  between runs*, which reads as flakiness in the code under test. **The threshold is
+  machine-dependent** — about 4 launches on an 8-core laptop, but as few as **2** on a
+  2-core GitHub runner, so the suite passed locally and then hung in CI from the second
+  file onward. Two halves to the invariant, and you need both:
+  1. one launch per FILE — one browser per harness, fresh browser *context* per run
+     (`test/e2e/harness.ts`). Module-level singletons shared across files do not work:
+     one file's `afterAll` tears down a browser another file is still using.
+  2. one file per PROCESS — `scripts/run-e2e.ts` spawns a separate `bun test` per e2e
+     file, globbed so adding a file cannot silently reintroduce the problem.
+
+  Net effect: e2e went from 131s with 2 spurious failures to ~14s with none. Worth knowing
+  before anyone "fixes" a phantom flake. **Do not run bare `bun test`** — use `bun run test`,
+  which walks the ladder tier by tier.
 - **A2 refinement — `[name*="j_id46"]` also matches `j_id460`.** Building the
   `jsf-id-collision` fixture showed the substring match is ambiguous even *inside* an
   ordered cascade. Changed to a suffix match.

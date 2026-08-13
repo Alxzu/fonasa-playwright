@@ -135,7 +135,12 @@ bun run lint             # biome
 bun run test:unit        # date rules, rate walk-back, config, check digits — no browser
 bun run test:selectors   # selector cascades vs hazard fixtures — no server
 bun run test:e2e         # the whole pipeline vs a mock BPS, incl. 15 failure scenarios
+bun run test             # all three, in order
 ```
+
+> Use `bun run test`, not bare `bun test`. Each e2e file must run in its own process —
+> more than one `chromium.launch()` per Bun process wedges (as few as two on a 2-core CI
+> runner). `scripts/run-e2e.ts` enforces that; see `docs/IMPROVEMENT_PLAN.md` §12.
 
 The mock is a stateful fake of the JSF wizard — it validates postbacks, re-renders with
 error blocks on failure, and can inject specific faults. Drive the real bot against it:
